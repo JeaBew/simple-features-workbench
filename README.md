@@ -1,3 +1,3 @@
-# Linguistic Features of German Easy and Plain Language
+# simple-features-workbench
 
 TODO

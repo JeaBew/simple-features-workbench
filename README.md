@@ -1,3 +1,3 @@
-##simple-features-workbench##
+# simple-features-workbench
 
 TODO

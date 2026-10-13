@@ -218,3 +218,34 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+paper_easy_plain_german_datasets/cache/data-asgc-easy
+paper_easy_plain_german_datasets/cache/data-asgc-orig
+paper_easy_plain_german_datasets/cache/data-asgc-plain
+paper_easy_plain_german_datasets/cache/data-german4all-easy
+paper_easy_plain_german_datasets/cache/data-german4all-orig
+paper_easy_plain_german_datasets/cache/data-Leiko_1.5-easy
+paper_easy_plain_german_datasets/cache/data-Leiko_1.5-plain
+paper_easy_plain_german_datasets/cache/data-Tiger-orig
+paper_easy_plain_german_datasets/cache/normalized/ASGC_EASY
+paper_easy_plain_german_datasets/cache/normalized/ASGC_ORIG
+paper_easy_plain_german_datasets/cache/normalized/ASGC_PLAIN
+paper_easy_plain_german_datasets/cache/normalized/G4A_EASY
+paper_easy_plain_german_datasets/cache/normalized/G4A_ORIG
+paper_easy_plain_german_datasets/cache/normalized/Leiko_EASY
+paper_easy_plain_german_datasets/cache/normalized/Leiko_PLAIN
+paper_easy_plain_german_datasets/cache/normalized/TIGER_ORIG
+paper_easy_plain_german_datasets/data/asgc/easy
+paper_easy_plain_german_datasets/data/asgc/orig
+paper_easy_plain_german_datasets/data/asgc/plain
+paper_easy_plain_german_datasets/data/deplain/orig
+paper_easy_plain_german_datasets/data/deplain/plain
+paper_easy_plain_german_datasets/data/german4all/easy
+paper_easy_plain_german_datasets/data/german4all/orig
+paper_easy_plain_german_datasets/data/Leiko_1.5/easy
+paper_easy_plain_german_datasets/data/Leiko_1.5/plain
+paper_easy_plain_german_datasets/data/Tiger/orig
+paper_easy_plain_german_datasets/datasets_raw
+paper_easy_plain_german_datasets/cache/data-deplain-orig
+paper_easy_plain_german_datasets/cache/data-deplain-plain
+paper_easy_plain_german_datasets/cache/normalized/DEplain_ORIG
+paper_easy_plain_german_datasets/cache/normalized/DEplain_PLAIN

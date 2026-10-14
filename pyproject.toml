@@ -22,7 +22,8 @@ dependencies = [
     "spacy (>=3.8.14,<4.0.0)",
     "requests (>=2.34.2,<3.0.0)",
     "torch (>=2.13.0,<3.0.0)",
-    "transformers (>=4.48.1,<5.0.0)"
+    "transformers (>=4.48.1,<5.0.0)",
+    "de-core-news-lg @ https://github.com/explosion/spacy-models/releases/download/de_core_news_lg-3.8.0/de_core_news_lg-3.8.0-py3-none-any.whl"
 ]
 
 

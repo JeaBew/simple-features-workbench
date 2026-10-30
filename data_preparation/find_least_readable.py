@@ -1,12 +1,7 @@
-import os
 from pathlib import Path
-from statistics import mean
 
-import seaborn as sns
-import matplotlib.pyplot as plt
-
-from utils import process_folder_with_filenames, _category
-from constants import (
+from utils import process_folder_with_filenames
+from data_preparation.constants import (
     TIGER_ORIG,
     ASGC_ORIG,
     ASGC_PLAIN,

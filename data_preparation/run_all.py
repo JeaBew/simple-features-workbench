@@ -8,7 +8,7 @@ deterministic order so that a single command runs the full suite of analyses.
 
 # Import the individual runner modules. The imports are placed at the top so
 # that any import‑time errors are raised early, making debugging easier.
-from features import run_token_length, run_freq, run_readability, run_sent_length, \
+from data_preparation.features import run_token_length, run_freq, run_readability, run_sent_length, \
     run_subjunctive, run_negations
 
 

@@ -487,7 +487,7 @@ def normalize_token(token_text: str) -> str:
 # ---------------------------------------------------------------------------
 
 def main() -> None:
-    from constants import (
+    from data_preparation.constants import (
         TIGER_ORIG,
         ASGC_ORIG,
         ASGC_PLAIN,

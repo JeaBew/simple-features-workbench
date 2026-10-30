@@ -4,7 +4,7 @@ import spacy
 from spacy.tokens import Doc
 from tqdm import tqdm
 
-from constants import (
+from data_preparation.constants import (
 #    TIGER_ORIG,
 #    ASGC_ORIG,
 #    ASGC_PLAIN,

@@ -1,3 +1,9 @@
+import sys
+from pathlib import Path
+
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(PROJECT_ROOT))
+
 from pathlib import Path
 from typing import Any
 
@@ -7,17 +13,16 @@ from itertools import zip_longest
 
 import pandas as pd
 import html
-import textwrap
 
 from py_lift.extractors import FE_AverageTokenLength, FE_TokenCount
 
-from features.run_synonyms import check_text as check_synonym_consistency
+from data_preparation.features.run_synonyms import check_text as check_synonym_consistency
 
 # ---------------------------------------------------------------------------
 # Configuration
 # ---------------------------------------------------------------------------
 
-CACHE_NORMALIZED_DIR = Path("cache") / "normalized"
+CACHE_NORMALIZED_DIR = PROJECT_ROOT / "data_preparation" / "cache" / "normalized"
 
 AVAILABLE_VIEWS = ["NormalizedView", "_InitialView"]
 DEFAULT_VIEW_NAME = "_InitialView"
@@ -405,19 +410,104 @@ def load_synonym_report(
         bert_similarity_threshold=bert_similarity_threshold,
     )
 
+CACHE_DIR = PROJECT_ROOT / "data_preparation" / "cache"
 
+# Anzeigename: (Ordner Original, Kennung Original, Ordner Vereinfacht, Kennung Vereinfacht)
+# Leere Kennung = Dateinamen sind in beiden Ordnern identisch.
+PAIRED_CORPORA: dict[str, tuple[str, str, str, str]] = {
+    "ASGC": ("data-asgc-orig", "AS", "data-asgc-easy", "LS"),
+    "DEplain": ("data-deplain-orig", "", "data-deplain-plain", ""),
+    "German4All": ("data-german4all-orig", "", "data-german4all-easy", ""),
+}
+
+
+def render_features_table(features: dict[str, str]) -> None:
+    if not features:
+        st.info("Keine Features gefunden.")
+        return
+    st.table(
+        pd.DataFrame(
+            {
+                "Feature": list(features),
+                "Value": [_round2(v) for v in features.values()],
+            }
+        )
+    )
+
+
+def render_compare_mode() -> None:
+    corpus_name = st.selectbox("Datensatz", list(PAIRED_CORPORA), key="pair_corpus")
+    orig_dir_name, orig_tag, easy_dir_name, easy_tag = PAIRED_CORPORA[corpus_name]
+    orig_dir = CACHE_DIR / orig_dir_name
+    easy_dir = CACHE_DIR / easy_dir_name
+
+    for d in (orig_dir, easy_dir):
+        if not d.is_dir():
+            st.error(f"Ordner nicht gefunden: `{d}`")
+            return
+
+    def _index_by_base(files: list[Path], tag: str) -> dict[str, Path]:
+        """Schlüssel: Dateiname ohne '_<tag>'-Endung und ohne '__<TAG>__' in der Mitte."""
+        if not tag:
+            return {p.stem: p for p in files}
+
+        result: dict[str, Path] = {}
+        for p in files:
+            stem = p.stem
+            if not stem.lower().endswith(f"_{tag.lower()}"):
+                continue
+            stem = stem[: -(len(tag) + 1)]
+            stem = stem.replace(f"__{tag.upper()}__", "__X__", 1)
+            result[stem] = p
+        return result
+
+    orig_files = _index_by_base(get_cas_files(orig_dir), orig_tag)
+    easy_files = _index_by_base(get_cas_files(easy_dir), easy_tag)
+    common = sorted(orig_files.keys() & easy_files.keys())
+
+    if not common:
+        st.warning("Keine Dateien mit gleichem Namen in beiden Ordnern gefunden.")
+        st.caption(f"Original: {len(orig_files)} Dateien, z. B. `{next(iter(orig_files), '-')}`")
+        st.caption(f"Vereinfacht: {len(easy_files)} Dateien, z. B. `{next(iter(easy_files), '-')}`")
+
+        missing = sorted(easy_files.keys() - orig_files.keys())
+        if missing:
+            with st.expander(f"{len(missing)} vereinfachte Dateien ohne Original"):
+                st.write(missing)
+        return
+    file_name = st.selectbox("Datei", common, key="pair_file")
+    st.caption(f"{len(common)} Dateien mit beiden Versionen")
+
+    left, right = st.columns(2)
+    for col, title, path in (
+        (left, "Original", orig_files[file_name]),
+        (right, "Vereinfacht", easy_files[file_name]),
+    ):
+        with col:
+            st.subheader(title)
+            data = load_cas_display_data(str(path.resolve()), view_name=DEFAULT_VIEW_NAME)
+            st.text_area(
+                label=title,
+                value=data["sofa_string"],
+                height=500,
+                key=f"cmp_{title}_{corpus_name}_{file_name}",
+                label_visibility="collapsed",
+            )
+            st.markdown("**Features**")
+            render_features_table(data["features"])
 # ---------------------------------------------------------------------------
 # Streamlit app
 # ---------------------------------------------------------------------------
 
-def main() -> None:
-    st.set_page_config(
-        page_title="CAS Browser",
-        layout="wide",
-    )
-
-    st.title("CAS Browser")
+def render_browser_mode() -> None:   # vorher: def main()
     st.write("Browse normalized CAS files from `cache/normalized/`.")
+    #st.set_page_config(
+    #    page_title="CAS Browser",
+    #    layout="wide",
+    #)
+
+    #st.title("CAS Browser")
+    #st.write("Browse normalized CAS files from `cache/normalized/`.")
 
     if "file_index" not in st.session_state:
         st.session_state["file_index"] = 0
@@ -721,6 +811,18 @@ def main() -> None:
                 #         st.write(f"Wert: {_round2(value)}")
                 st.info("No sentence-level features found in this CAS.")
 
+
+def main() -> None:
+    st.set_page_config(page_title="CAS Browser", layout="wide")
+    st.title("CAS Browser")
+
+    browser_tab, compare_tab = st.tabs(["Browser", "Compare"])
+
+    with browser_tab:
+        render_browser_mode()
+
+    with compare_tab:
+        render_compare_mode()
 
 if __name__ == "__main__":
     main()

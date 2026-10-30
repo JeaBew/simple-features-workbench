@@ -384,7 +384,8 @@ def main() -> None:
     }
 
     # Plot stacked bars for all corpora.
-    plot_stacked_bars(avg_by_corpus, output_path=Path("../output") / "freq_stacked_types_horizontal.png")
+    plot_stacked_bars(avg_by_corpus, output_path=Path(
+        "../output") / "freq_stacked_types_horizontal.png")
     
     # Plot grouped bars (features on x‑axis) for all corpora.
     #plot_grouped_bars(avg_by_corpus, output_path=Path("output") / "freq_grouped.png")
@@ -392,7 +393,8 @@ def main() -> None:
     # ---------------------------------------------------------------------
     # Write LaTeX table summarizing the average frequency‑ratio features.
     # ---------------------------------------------------------------------
-    write_latex_table(avg_by_corpus, output_path=Path("../output") / "freq_table_types.tex")
+    write_latex_table(avg_by_corpus, output_path=Path(
+        "../output") / "freq_table_types.tex")
 
 if __name__ == "__main__":
     main()

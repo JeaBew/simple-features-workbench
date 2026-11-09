@@ -17,6 +17,7 @@ import html
 from py_lift.extractors import FE_AverageTokenLength, FE_TokenCount
 
 from data_preparation.features.run_synonyms import check_text as check_synonym_consistency
+from nli import run_nli_pipeline
 
 # ---------------------------------------------------------------------------
 # Configuration
@@ -60,6 +61,8 @@ FEATURE_EXTRACTORS: dict[str, Any] = {
 # ---------------------------------------------------------------------------
 # Helper functions
 # ---------------------------------------------------------------------------
+
+
 
 def get_view_name_for_feature(feature_name: str) -> str:
     """Return the view that should be used for a given feature."""
@@ -475,8 +478,11 @@ def render_compare_mode() -> None:
             with st.expander(f"{len(missing)} vereinfachte Dateien ohne Original"):
                 st.write(missing)
         return
+
     file_name = st.selectbox("Datei", common, key="pair_file")
     st.caption(f"{len(common)} Dateien mit beiden Versionen")
+
+    texts: dict[str, str] = {}
 
     left, right = st.columns(2)
     for col, title, path in (
@@ -486,6 +492,9 @@ def render_compare_mode() -> None:
         with col:
             st.subheader(title)
             data = load_cas_display_data(str(path.resolve()), view_name=DEFAULT_VIEW_NAME)
+
+            texts[title] = data["sofa_string"]
+
             st.text_area(
                 label=title,
                 value=data["sofa_string"],
@@ -493,8 +502,90 @@ def render_compare_mode() -> None:
                 key=f"cmp_{title}_{corpus_name}_{file_name}",
                 label_visibility="collapsed",
             )
+
             st.markdown("**Features**")
             render_features_table(data["features"])
+
+    st.divider()
+    st.subheader("NLI")
+
+    original_text = texts.get("Original", "")
+    simple_text = texts.get("Vereinfacht", "")
+
+    if not original_text or not simple_text:
+        st.info("Für NLI werden beide Texte benötigt.")
+        return
+
+    with st.spinner("Running NLI..."):
+        split_text, split_simple_text, found_entailments = run_nli_pipeline(
+            original_text,
+            simple_text,
+        )
+
+    show_unmatched = st.checkbox(
+        "Show unmatched sentences",
+        value=False,
+        key=f"nli_show_unmatched_{corpus_name}_{file_name}",
+    )
+
+    nli_html = render_entailment_table(
+        split_text,
+        split_simple_text,
+        found_entailments,
+        show_unmatched=show_unmatched,
+    )
+
+    st.markdown(nli_html, unsafe_allow_html=True)
+
+
+
+import html
+
+
+def render_entailment_table(
+    split_text: list[str],
+    split_simple_text: list[str],
+    found_entailments: list[tuple[int, list[tuple[int, float]]]],
+    show_unmatched: bool = False,
+) -> str:
+    """Links der Originalsatz, rechts alle vereinfachten Sätze mit Entailment,
+    jeweils mit der Wahrscheinlichkeit in Klammern vorne."""
+    matches_by_index = dict(found_entailments)
+    rows = []
+
+    for i, original in enumerate(split_text):
+        matches = matches_by_index.get(i, [])
+        if not matches and not show_unmatched:
+            continue
+
+        left = html.escape(original)
+        if matches:
+            right = "<br>".join(
+                f"<b>({prob:.2f})</b> {html.escape(split_simple_text[j])}"
+                for j, prob in matches
+            )
+        else:
+            right = "–"
+
+        rows.append(f"<tr><td>{left}</td><td>{right}</td></tr>")
+
+    if not rows:
+        return "<i>Keine Entailments gefunden.</i>"
+
+    style = """<style>
+.entail-table { width: 100%; border-collapse: collapse; }
+.entail-table th, .entail-table td {
+    border: 1px solid rgba(128, 128, 128, 0.4);
+    padding: 0.4rem 0.6rem;
+    vertical-align: top;
+    text-align: left;
+}
+.entail-table th:first-child, .entail-table td:first-child { width: 40%; }
+</style>"""
+
+    header = "<tr><th>Original</th><th>Entailment</th></tr>"
+    return style + '<table class="entail-table">' + header + "".join(rows) + "</table>"
+
 # ---------------------------------------------------------------------------
 # Streamlit app
 # ---------------------------------------------------------------------------
